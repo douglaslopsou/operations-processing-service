@@ -65,7 +65,7 @@ export async function cleanDatabase(dataSource: DataSource): Promise<void> {
   const queryRunner = dataSource.createQueryRunner();
 
   try {
-    await queryRunner.query('SET session_replication_role = replica;');
+    await queryRunner.startTransaction();
 
     await queryRunner.query('TRUNCATE TABLE operation_events CASCADE;');
     await queryRunner.query('TRUNCATE TABLE operations CASCADE;');
@@ -75,7 +75,10 @@ export async function cleanDatabase(dataSource: DataSource): Promise<void> {
       'ALTER SEQUENCE IF EXISTS account_number_seq RESTART WITH 1000;',
     );
 
-    await queryRunner.query('SET session_replication_role = DEFAULT;');
+    await queryRunner.commitTransaction();
+  } catch (error) {
+    await queryRunner.rollbackTransaction();
+    throw error;
   } finally {
     await queryRunner.release();
   }
