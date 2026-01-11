@@ -276,6 +276,46 @@ Create a new credit or debit operation.
 - `accountId` must be a valid UUID of an existing account
 - Operations are processed asynchronously
 - The operation state will transition: PENDING → PROCESSING → COMPLETED/REJECTED
+- Duplicate `externalId` is not allowed (returns `422 UnprocessableEntityException`)
+
+#### GET /operations/:id
+
+Get operation by UUID.
+
+**Parameters**:
+
+- `id` (path parameter): UUID of the operation
+
+**Response**: `200 OK` - Operation object
+
+**Example Response**:
+
+```json
+{
+  "operationId": "123e4567-e89b-12d3-a456-426614174000",
+  "externalId": "op-123",
+  "accountId": "123e4567-e89b-12d3-a456-426614174000",
+  "operationType": "CREDIT",
+  "currentState": "COMPLETED",
+  "amount": 100.5,
+  "currency": "USD",
+  "version": 3,
+  "createdAt": "2024-01-01T00:00:00.000Z",
+  "updatedAt": "2024-01-01T00:00:05.000Z",
+  "account": {
+    "accountId": "123e4567-e89b-12d3-a456-426614174000",
+    "externalId": "acc-123",
+    "accountNumber": "0000001000",
+    "holderName": "John Doe",
+    "balance": 1100.5,
+    "currency": "USD"
+  }
+}
+```
+
+**Error Responses**:
+
+- `404 Not Found`: Operation not found
 
 ## Architecture
 
