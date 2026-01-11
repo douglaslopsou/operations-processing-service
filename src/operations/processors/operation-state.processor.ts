@@ -314,11 +314,24 @@ export class OperationStateProcessor extends WorkerHost {
             });
 
             if (updatedOperation) {
+              this.logger.debug(
+                `Calling validation service: externalId=${external_id}, operationType=${updatedOperation.operationType}, amount=${updatedOperation.amount}`,
+              );
               const validationResult =
                 await this.validationService.validateOperation(
                   updatedOperation,
                   manager,
                 );
+
+              if (validationResult === EventType.PROCESSING_REJECTED) {
+                this.logger.warn(
+                  `Validation failed for operation: externalId=${external_id}, operationType=${updatedOperation.operationType}, amount=${updatedOperation.amount}`,
+                );
+              } else {
+                this.logger.log(
+                  `Validation passed for operation: externalId=${external_id}`,
+                );
+              }
 
               // Generate event based on validation
               const validationEvent = await manager.save(OperationEvent, {

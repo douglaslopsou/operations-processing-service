@@ -36,8 +36,8 @@ export class ValidationService {
     });
 
     if (!account) {
-      this.logger.warn(
-        `Validation failed: Account not found: accountId=${operation.accountId}`,
+      this.logger.error(
+        `Validation failed: Account not found: accountId=${operation.accountId}, externalId=${operation.externalId}`,
       );
       return EventType.PROCESSING_REJECTED;
     }
@@ -50,29 +50,31 @@ export class ValidationService {
       `Step 2: Validating currency: operationCurrency=${operation.currency}, accountCurrency=${account.currency}`,
     );
     if (operation.currency !== account.currency) {
-      this.logger.warn(
-        `Validation failed: Currency mismatch: operationCurrency=${operation.currency}, accountCurrency=${account.currency}`,
+      this.logger.error(
+        `Validation failed: Currency mismatch: externalId=${operation.externalId}, operationCurrency=${operation.currency}, accountCurrency=${account.currency}`,
       );
       return EventType.PROCESSING_REJECTED; // Different currencies
     }
 
-    // 3. Validate amount
-    this.logger.debug(`Step 3: Validating amount: amount=${operation.amount}`);
-    if (operation.amount <= 0) {
-      this.logger.warn(
-        `Validation failed: Invalid amount: amount=${operation.amount}`,
+    // 3. Validate amount (convert to number for comparison)
+    const operationAmount = Number(operation.amount);
+    this.logger.debug(`Step 3: Validating amount: amount=${operationAmount}`);
+    if (operationAmount <= 0 || isNaN(operationAmount)) {
+      this.logger.error(
+        `Validation failed: Invalid amount: externalId=${operation.externalId}, amount=${operation.amount}`,
       );
       return EventType.PROCESSING_REJECTED; // Invalid amount
     }
 
-    // 4. Validate balance for debit
+    // 4. Validate balance for debit (convert to number for comparison)
     if (operation.operationType === OperationType.DEBIT) {
+      const accountBalance = Number(account.balance);
       this.logger.debug(
-        `Step 4: Validating balance for DEBIT operation: amount=${operation.amount}, balance=${account.balance}`,
+        `Step 4: Validating balance for DEBIT operation: amount=${operationAmount}, balance=${accountBalance}`,
       );
-      if (operation.amount > account.balance) {
-        this.logger.warn(
-          `Validation failed: Insufficient balance: amount=${operation.amount}, balance=${account.balance}`,
+      if (operationAmount > accountBalance) {
+        this.logger.error(
+          `Validation failed: Insufficient balance: externalId=${operation.externalId}, operationType=DEBIT, amount=${operationAmount}, accountBalance=${accountBalance}`,
         );
         return EventType.PROCESSING_REJECTED; // Insufficient balance
       }
