@@ -12,7 +12,6 @@ import { OperationEvent } from '../core/entities/operation-event.entity';
 import { CreateOperationDto } from './dto/create-operation.dto';
 import { EventType } from '../core/enums/event-type.enum';
 import { OperationState } from '../core/enums/operation-state.enum';
-import { FINAL_STATES } from '../core/enums/operation-state.enum';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import * as crypto from 'crypto';
@@ -54,9 +53,9 @@ export class OperationsService {
       }
       this.logger.debug(`Account found: accountId=${account.accountId}`);
 
-      // 2. Acquire pessimistic lock on operation (if it exists)
+      // 2. Check if operation with same external_id already exists (block duplicate external_id)
       this.logger.debug(
-        `Step 2: Acquiring pessimistic lock for operation: externalId=${dto.externalId}`,
+        `Step 2: Checking if operation already exists: externalId=${dto.externalId}`,
       );
       const operation = await manager
         .createQueryBuilder()
@@ -68,26 +67,19 @@ export class OperationsService {
         .setLock('pessimistic_write')
         .getOne();
 
-      // 3. If operation exists and is in final state, reject
-      if (
-        operation &&
-        FINAL_STATES.includes(operation.currentState as OperationState)
-      ) {
+      // 3. If operation exists, reject immediately (duplicate external_id not allowed)
+      if (operation) {
         this.logger.warn(
-          `Operation already in final state: externalId=${dto.externalId}, state=${operation.currentState}`,
+          `Operation with external_id already exists: externalId=${dto.externalId}, currentState=${operation.currentState}`,
         );
-        throw new UnprocessableEntityException('Operation in final state');
+        throw new UnprocessableEntityException(
+          `Operation with external_id '${dto.externalId}' already exists. Duplicate external_id is not allowed.`,
+        );
       }
 
-      if (operation) {
-        this.logger.debug(
-          `Existing operation found: externalId=${dto.externalId}, currentState=${operation.currentState}`,
-        );
-      } else {
-        this.logger.debug(
-          `No existing operation found: externalId=${dto.externalId}, will create new operation`,
-        );
-      }
+      this.logger.debug(
+        `No existing operation found: externalId=${dto.externalId}, will create new operation`,
+      );
 
       // 4. Calculate payload hash for deduplication
       this.logger.debug(`Step 4: Calculating payload hash for deduplication`);
@@ -100,7 +92,7 @@ export class OperationsService {
         `Payload hash calculated: ${payloadHash.substring(0, 8)}...`,
       );
 
-      // 5. Always insert operation_created event (no unique constraint)
+      // 5. Create OPERATION_CREATED event
       this.logger.debug(
         `Step 5: Creating OPERATION_CREATED event: externalId=${dto.externalId}`,
       );
@@ -117,27 +109,22 @@ export class OperationsService {
         `OPERATION_CREATED event created: eventId=${event.operationEventId}, externalId=${dto.externalId}`,
       );
 
-      // 6. If operation doesn't exist, create operation in CREATED state
-      let createdOperation: Operation;
-      if (!operation) {
-        this.logger.debug(
-          `Step 6: Creating new operation with CREATED state: externalId=${dto.externalId}`,
-        );
-        createdOperation = await manager.save(Operation, {
-          externalId: dto.externalId,
-          accountId: account.accountId,
-          operationType: dto.operationType,
-          currentState: OperationState.CREATED,
-          amount: dto.amount,
-          currency: dto.currency,
-          version: 1,
-        });
-        this.logger.log(
-          `New operation created: externalId=${dto.externalId}, state=CREATED`,
-        );
-      } else {
-        createdOperation = operation;
-      }
+      // 6. Create operation in CREATED state
+      this.logger.debug(
+        `Step 6: Creating new operation with CREATED state: externalId=${dto.externalId}`,
+      );
+      const createdOperation = await manager.save(Operation, {
+        externalId: dto.externalId,
+        accountId: account.accountId,
+        operationType: dto.operationType,
+        currentState: OperationState.CREATED,
+        amount: dto.amount,
+        currency: dto.currency,
+        version: 1,
+      });
+      this.logger.log(
+        `New operation created: externalId=${dto.externalId}, state=CREATED`,
+      );
 
       // 7. Enqueue processing (outside transaction)
       this.logger.debug(
