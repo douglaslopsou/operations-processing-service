@@ -578,12 +578,59 @@ yarn lint
 
 ## Testing
 
+The project implements a **complete test pyramid** using Testcontainers for real infrastructure (PostgreSQL and Redis).
+
+### Test Structure
+
+```
+        /\
+       /  \
+      / E2E \        ← End-to-End Tests (10%)
+     /--------\
+    /          \
+   / Integration \   ← Integration Tests (20%)
+  /--------------\
+ /                \
+/   Unit Tests     \  ← Unit Tests (70%)
+/------------------\
+```
+
+#### Unit Tests
+- **Location**: `src/**/*.spec.ts`
+- **Characteristics**: 
+  - Completely isolate components
+  - Use mocks for all dependencies
+  - Fast and isolated
+  - Example: `src/operations/processors/operation-state.processor.spec.ts`
+
+#### Integration Tests
+- **Location**: `test/**/*.integration.spec.ts`
+- **Characteristics**:
+  - Test multiple components together (Controller + Service + TypeORM)
+  - Use Testcontainers for real PostgreSQL and Redis
+  - Mock only BullMQ Worker (doesn't process jobs)
+  - Example: `test/operations.integration.spec.ts`
+
+#### E2E Tests (End-to-End)
+- **Location**: `test/**/*.e2e-spec.ts`
+- **Characteristics**:
+  - Test complete application (AppModule)
+  - Use Testcontainers for real PostgreSQL and Redis
+  - Real worker processes jobs
+  - Test complete flows: HTTP → Controller → Service → Database → Queue → Worker
+  - Example: `test/operations.e2e-spec.ts`
+
+### Test Commands
+
 ```bash
 # Unit tests
 yarn test
 
 # Unit tests with watch mode
 yarn test:watch
+
+# Integration tests
+yarn test:integration
 
 # E2E tests
 yarn test:e2e
@@ -594,6 +641,21 @@ yarn test:cov
 # Debug tests
 yarn test:debug
 ```
+
+### Testcontainers
+
+Integration and E2E tests use **Testcontainers** to create isolated containers for PostgreSQL and Redis:
+
+- **Isolation**: Each execution has its own containers
+- **No local dependencies**: Doesn't require Docker running beforehand
+- **CI/CD friendly**: Works in any environment with Docker
+- **Real environment**: Tests with real PostgreSQL and Redis
+
+**Requirements**:
+- Docker installed and running
+- Dependencies `testcontainers`, `@testcontainers/postgresql`, and `@testcontainers/redis` are installed
+
+**Note**: Containers are automatically created before tests and destroyed after. This ensures complete isolation between executions.
 
 ## Project Structure
 
