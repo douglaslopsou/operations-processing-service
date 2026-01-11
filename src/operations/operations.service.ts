@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   UnprocessableEntityException,
+  BadRequestException,
   Logger,
 } from '@nestjs/common';
 import { InjectRepository, InjectDataSource } from '@nestjs/typeorm';
@@ -144,6 +145,17 @@ export class OperationsService {
 
   async findOne(id: string): Promise<Operation> {
     this.logger.debug(`Finding operation by ID: operationId=${id}`);
+
+    // Validate UUID format to prevent database errors
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(id)) {
+      this.logger.warn(`Invalid UUID format: ${id}`);
+      throw new BadRequestException(
+        `Invalid UUID format. The operation ID must be a valid UUID.`,
+      );
+    }
+
     const operation = await this.operationRepository.findOne({
       where: { operationId: id },
       relations: ['account'],

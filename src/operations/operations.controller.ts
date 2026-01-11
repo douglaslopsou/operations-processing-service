@@ -50,6 +50,10 @@ export class OperationsController {
     type: Operation,
   })
   @ApiResponse({
+    status: 400,
+    description: 'Invalid UUID format',
+  })
+  @ApiResponse({
     status: 404,
     description: 'Operation not found',
   })
