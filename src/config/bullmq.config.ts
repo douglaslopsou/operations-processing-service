@@ -1,9 +1,9 @@
-import { BullModuleOptions } from '@nestjs/bullmq';
+import { BullRootModuleOptions } from '@nestjs/bullmq';
 import { createRedisClient } from './redis.config';
 
 const redis = createRedisClient();
 
-export const bullmqConfig: BullModuleOptions = {
+export const bullmqConfig: BullRootModuleOptions = {
   connection: {
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT || '6380', 10),
