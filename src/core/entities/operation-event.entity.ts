@@ -7,38 +7,42 @@ import {
 } from 'typeorm';
 
 @Entity('operation_events')
-@Index(['external_id', 'is_processed'])
-@Index(['external_id', 'event_type', 'payload_hash', 'is_processed'])
+@Index(['externalId', 'isProcessed'])
+@Index(['externalId', 'eventType', 'payloadHash', 'isProcessed'])
 export class OperationEvent {
-  @PrimaryGeneratedColumn('uuid')
-  operation_event_id: string;
+  @PrimaryGeneratedColumn('uuid', { name: 'operation_event_id' })
+  operationEventId: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ name: 'external_id', type: 'varchar', length: 255 })
   @Index()
-  external_id: string;
+  externalId: string;
 
-  @Column({ type: 'varchar', length: 100 })
-  event_type: string;
+  @Column({ name: 'event_type', type: 'varchar', length: 100 })
+  eventType: string;
 
   @Column({ type: 'jsonb' })
   payload: any;
 
-  @Column({ type: 'varchar', length: 64 })
-  payload_hash: string;
+  @Column({ name: 'payload_hash', type: 'varchar', length: 64 })
+  payloadHash: string;
 
-  @Column({ type: 'boolean', default: false })
-  is_processed: boolean;
+  @Column({ name: 'is_processed', type: 'boolean', default: false })
+  isProcessed: boolean;
 
-  @Column({ type: 'timestamp', nullable: true })
-  processed_at: Date;
+  @Column({ name: 'processed_at', type: 'timestamp', nullable: true })
+  processedAt: Date;
 
-  @Column({ type: 'uuid', nullable: true })
-  account_id: string;
+  @Column({ name: 'account_id', type: 'uuid', nullable: true })
+  accountId: string;
 
-  @Column({ type: 'varchar', length: 20, nullable: true })
-  operation_type: string;
+  @Column({
+    name: 'operation_type',
+    type: 'varchar',
+    length: 20,
+    nullable: true,
+  })
+  operationType: string;
 
-  @CreateDateColumn()
-  created_at: Date;
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt: Date;
 }
-
