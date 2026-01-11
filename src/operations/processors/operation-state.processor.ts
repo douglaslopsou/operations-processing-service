@@ -317,6 +317,7 @@ export class OperationStateProcessor extends WorkerHost {
               const validationResult =
                 await this.validationService.validateOperation(
                   updatedOperation,
+                  manager,
                 );
 
               // Generate event based on validation

@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { Account } from '../../core/entities/account.entity';
 import { Operation } from '../../core/entities/operation.entity';
 import { OperationType } from '../../core/enums/operation-type.enum';
@@ -17,6 +17,7 @@ export class ValidationService {
 
   async validateOperation(
     operation: Operation,
+    manager?: EntityManager,
   ): Promise<EventType.PROCESSING_COMPLETED | EventType.PROCESSING_REJECTED> {
     this.logger.debug(
       `Starting validation for operation: externalId=${operation.externalId}, accountId=${operation.accountId}, type=${operation.operationType}, amount=${operation.amount}`,
@@ -26,7 +27,10 @@ export class ValidationService {
     this.logger.debug(
       `Step 1: Loading account with pessimistic lock: accountId=${operation.accountId}`,
     );
-    const account = await this.accountRepository.findOne({
+    const accountRepository = manager
+      ? manager.getRepository(Account)
+      : this.accountRepository;
+    const account = await accountRepository.findOne({
       where: { accountId: operation.accountId },
       lock: { mode: 'pessimistic_write' },
     });
@@ -35,7 +39,7 @@ export class ValidationService {
       this.logger.warn(
         `Validation failed: Account not found: accountId=${operation.accountId}`,
       );
-      return EventType.PROCESSING_REJECTED; // Account not found
+      return EventType.PROCESSING_REJECTED;
     }
     this.logger.debug(
       `Account loaded: accountId=${account.accountId}, balance=${account.balance}, currency=${account.currency}`,
@@ -81,4 +85,3 @@ export class ValidationService {
     return EventType.PROCESSING_COMPLETED;
   }
 }
-
