@@ -1,7 +1,7 @@
 import { DataSource } from 'typeorm';
-import { Account } from '../operations/entities/account.entity';
-import { Operation } from '../operations/entities/operation.entity';
-import { OperationEvent } from '../operations/entities/operation-event.entity';
+import { Account } from '../core/entities/account.entity';
+import { Operation } from '../core/entities/operation.entity';
+import { OperationEvent } from '../core/entities/operation-event.entity';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
@@ -13,7 +13,7 @@ export const AppDataSource = new DataSource({
   entities: [Account, Operation, OperationEvent],
   synchronize: false,
   logging: process.env.NODE_ENV === 'development',
-  migrations: ['src/migrations/*.ts'],
+  migrations: ['src/core/migrations/*.ts'],
   migrationsTableName: 'migrations',
   migrationsRun: false,
 });
