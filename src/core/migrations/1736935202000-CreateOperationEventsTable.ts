@@ -102,3 +102,4 @@ export class CreateOperationEventsTable1736935202000 implements MigrationInterfa
     await queryRunner.dropTable('operation_events');
   }
 }
+
