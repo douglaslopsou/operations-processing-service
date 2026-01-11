@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { OperationsModule } from './operations/operations.module';
-import { Account } from './operations/entities/account.entity';
-import { Operation } from './operations/entities/operation.entity';
-import { OperationEvent } from './operations/entities/operation-event.entity';
+import { AccountsModule } from './accounts/accounts.module';
+import { Account } from './core/entities/account.entity';
+import { Operation } from './core/entities/operation.entity';
+import { OperationEvent } from './core/entities/operation-event.entity';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { OperationEvent } from './operations/entities/operation-event.entity';
       synchronize: false,
       logging: process.env.NODE_ENV === 'development',
     }),
+    AccountsModule,
     OperationsModule,
   ],
 })
