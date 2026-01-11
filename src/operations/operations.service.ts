@@ -34,7 +34,7 @@ export class OperationsService {
     private queue: Queue,
   ) {}
 
-  async createOperation(dto: CreateOperationDto) {
+  async createOperation(dto: CreateOperationDto): Promise<Operation> {
     this.logger.log(
       `Creating operation: externalId=${dto.externalId}, accountId=${dto.accountId}, type=${dto.operationType}, amount=${dto.amount}, currency=${dto.currency}`,
     );
@@ -118,11 +118,12 @@ export class OperationsService {
       );
 
       // 6. If operation doesn't exist, create operation in CREATED state
+      let createdOperation: Operation;
       if (!operation) {
         this.logger.debug(
           `Step 6: Creating new operation with CREATED state: externalId=${dto.externalId}`,
         );
-        await manager.save(Operation, {
+        createdOperation = await manager.save(Operation, {
           externalId: dto.externalId,
           accountId: account.accountId,
           operationType: dto.operationType,
@@ -134,6 +135,8 @@ export class OperationsService {
         this.logger.log(
           `New operation created: externalId=${dto.externalId}, state=CREATED`,
         );
+      } else {
+        createdOperation = operation;
       }
 
       // 7. Enqueue processing (outside transaction)
@@ -148,7 +151,7 @@ export class OperationsService {
       this.logger.log(
         `Operation creation completed successfully: externalId=${dto.externalId}`,
       );
-      return { status: 202, event };
+      return createdOperation;
     });
   }
 
