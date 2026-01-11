@@ -142,6 +142,24 @@ export class OperationsService {
     });
   }
 
+  async findOne(id: string): Promise<Operation> {
+    this.logger.debug(`Finding operation by ID: operationId=${id}`);
+    const operation = await this.operationRepository.findOne({
+      where: { operationId: id },
+      relations: ['account'],
+    });
+
+    if (!operation) {
+      this.logger.warn(`Operation not found: operationId=${id}`);
+      throw new NotFoundException(`Operation with ID ${id} not found`);
+    }
+
+    this.logger.debug(
+      `Operation found: operationId=${id}, externalId=${operation.externalId}, state=${operation.currentState}`,
+    );
+    return operation;
+  }
+
   private calculatePayloadHash(payload: any): string {
     return crypto
       .createHash('sha256')
