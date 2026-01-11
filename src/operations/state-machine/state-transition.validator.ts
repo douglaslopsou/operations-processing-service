@@ -21,6 +21,11 @@ export class StateTransitionValidator {
       return false;
     }
 
+    // CREATED state - only operation_created is valid
+    if (currentState === OperationState.CREATED) {
+      return eventType === EventType.OPERATION_CREATED;
+    }
+
     // PENDING state - only processing_started is valid
     if (currentState === OperationState.PENDING) {
       return eventType === EventType.PROCESSING_STARTED;

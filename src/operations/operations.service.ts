@@ -117,22 +117,22 @@ export class OperationsService {
         `OPERATION_CREATED event created: eventId=${event.operationEventId}, externalId=${dto.externalId}`,
       );
 
-      // 6. If operation doesn't exist, create operation in PENDING state
+      // 6. If operation doesn't exist, create operation in CREATED state
       if (!operation) {
         this.logger.debug(
-          `Step 6: Creating new operation with PENDING state: externalId=${dto.externalId}`,
+          `Step 6: Creating new operation with CREATED state: externalId=${dto.externalId}`,
         );
         await manager.save(Operation, {
           externalId: dto.externalId,
           accountId: account.accountId,
           operationType: dto.operationType,
-          currentState: OperationState.PENDING,
+          currentState: OperationState.CREATED,
           amount: dto.amount,
           currency: dto.currency,
           version: 1,
         });
         this.logger.log(
-          `New operation created: externalId=${dto.externalId}, state=PENDING`,
+          `New operation created: externalId=${dto.externalId}, state=CREATED`,
         );
       }
 
