@@ -2,6 +2,8 @@
 
 Event Sourcing Operations Endpoint with NestJS, PostgreSQL, BullMQ, and Redis.
 
+> 📖 **Short README Available**: For a concise overview of architecture, trade-offs, and scalability/failure handling strategies, see [README-SHORT.md](README-SHORT.md) (in Portuguese - more summarized version).
+
 ## Features
 
 - Event Sourcing architecture
@@ -596,14 +598,16 @@ The project implements a **complete test pyramid** using Testcontainers for real
 ```
 
 #### Unit Tests
+
 - **Location**: `src/**/*.spec.ts`
-- **Characteristics**: 
+- **Characteristics**:
   - Completely isolate components
   - Use mocks for all dependencies
   - Fast and isolated
   - Example: `src/operations/processors/operation-state.processor.spec.ts`
 
 #### Integration Tests
+
 - **Location**: `test/**/*.integration.spec.ts`
 - **Characteristics**:
   - Test multiple components together (Controller + Service + TypeORM)
@@ -612,6 +616,7 @@ The project implements a **complete test pyramid** using Testcontainers for real
   - Example: `test/operations.integration.spec.ts`
 
 #### E2E Tests (End-to-End)
+
 - **Location**: `test/**/*.e2e-spec.ts`
 - **Characteristics**:
   - Test complete application (AppModule)
@@ -652,6 +657,7 @@ Integration and E2E tests use **Testcontainers** to create isolated containers f
 - **Real environment**: Tests with real PostgreSQL and Redis
 
 **Requirements**:
+
 - Docker installed and running
 - Dependencies `testcontainers`, `@testcontainers/postgresql`, and `@testcontainers/redis` are installed
 
